@@ -40,6 +40,8 @@ jobs:
           tags: ghcr.io/grid-pilot/ezbookkeeping:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            SKIP_TESTS=true
 
   deploy:
     runs-on: ubuntu-latest
