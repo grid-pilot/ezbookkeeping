@@ -41,7 +41,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            SKIP_TESTS=true
+            SKIP_TESTS=BankOfIsrael|ThirdParty|ApiLatest
 
   deploy:
     runs-on: ubuntu-latest
