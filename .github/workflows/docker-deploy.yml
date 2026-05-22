@@ -6,8 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: grid-pilot/ezbookkeeping
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-push:
@@ -15,8 +14,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
@@ -41,23 +38,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            SKIP_TESTS=BankOfIsrael|ThirdParty|ApiLatest
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
-    steps:
-      - name: Deploy to VM101
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VM101_HOST }}
-          username: ${{ secrets.VM101_USER }}
-          key: ${{ secrets.VM101_SSH_KEY }}
-          script: |
-            docker pull ghcr.io/grid-pilot/ezbookkeeping:latest
-            cd /home/devops/new_docker_structure/stacks/finance
-            docker compose -f docker-compose.yml up -d ezbookkeeping
-            echo "Deployed $(date)"
+            SKIP_TESTS=BankOfIsrael|ApiLatest
