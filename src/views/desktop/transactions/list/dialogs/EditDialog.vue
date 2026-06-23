@@ -1,5 +1,5 @@
 <template>
-    <v-dialog width="1000" :persistent="isTransactionModified" v-model="showState">
+    <v-dialog width="1000" :persistent="isTransactionModified || recognizing" v-model="showState">
         <v-card class="pa-sm-1 pa-md-2">
             <template #title>
                 <div class="d-flex align-center justify-center">
@@ -8,6 +8,7 @@
                         <v-progress-circular indeterminate size="22" class="ms-2" v-if="loading"></v-progress-circular>
                     </div>
                     <v-spacer/>
+                    <small class="ms-2 text-truncate" v-if="recognizing">{{ tt('AI can make mistakes. Check important info.') }}</small>
                     <v-btn density="comfortable" color="default" variant="text" class="ms-2" :icon="true"
                            :disabled="loading || submitting || recognizing"
                            v-if="mode !== TransactionEditPageMode.View && type === TransactionEditPageType.Transaction && activeTab === 'basicInfo' && isTransactionFromAITextRecognitionEnabled()"
@@ -497,7 +498,7 @@
             <v-card-text>
                 <div class="w-100 d-flex justify-center flex-wrap mt-sm-1 mt-md-2 gap-4">
                     <v-btn color="primary" :disabled="!pastedText || !pastedText.trim() || recognizing" @click="showPasteTextDialog = false; recognizeText(pastedText);">
-                        {{ tt('Confirm') }}
+                        {{ tt('Recognize') }}
                     </v-btn>
                     <v-btn color="secondary" variant="tonal" :disabled="recognizing" @click="showPasteTextDialog = false; pastedText = '';">{{ tt('Cancel') }}</v-btn>
                 </div>
@@ -997,16 +998,18 @@ function recognizeFromClipboard(): void {
         return;
     }
 
+    pastedText.value = '';
+
     navigator.clipboard.readText().then(text => {
-        if (text && text.trim()) {
-            recognizeText(text.trim());
+        pastedText.value = text && text.trim() ? text.trim() : '';
+
+        if (pastedText.value && !settingsStore.appSettings.alwaysRequireConfirmationOfClipboardContentBeforeSubmission) {
+            recognizeText(pastedText.value);
         } else {
-            pastedText.value = '';
             showPasteTextDialog.value = true;
         }
     }).catch(error => {
         logger.error('failed to read clipboard', error);
-        pastedText.value = '';
         showPasteTextDialog.value = true;
     });
 }
