@@ -126,6 +126,10 @@ export class InsightsExplorer implements InsightsExplorerInfoResponse {
         };
     }
 
+    public getQueryiesPrettyJson(): string {
+        return JSON.stringify(this.queries.map(q => q.toJsonObject()), null, 4);
+    }
+
     public toCreateRequest(clientSessionId: string): InsightsExplorerCreateRequest {
         return {
             name: this.name,
