@@ -675,7 +675,7 @@ export default {
             timeout: DEFAULT_UPLOAD_API_TIMEOUT
         } as ApiRequestConfig);
     },
-    parseImportTransaction: ({ fileType, additionalOptions, fileEncoding, importFile, columnMapping, transactionTypeMapping, hasHeaderLine, timeFormat, timezoneFormat, amountDecimalSeparator, amountDigitGroupingSymbol, geoSeparator, geoOrder, tagSeparator }: { fileType: string, additionalOptions?: ImportFileTypeSupportedAdditionalOptions, fileEncoding?: string, importFile: File, columnMapping?: Record<number, number>, transactionTypeMapping?: Record<string, TransactionType>, hasHeaderLine?: boolean, timeFormat?: string, timezoneFormat?: string, amountDecimalSeparator?: string, amountDigitGroupingSymbol?: string, geoSeparator?: string, geoOrder?: string, tagSeparator?: string }): ApiResponsePromise<ImportTransactionResponsePageWrapper> => {
+    parseImportTransaction: ({ fileType, additionalOptions, aiAdditionalPrompt, fileEncoding, importFile, columnMapping, transactionTypeMapping, hasHeaderLine, timeFormat, timezoneFormat, amountDecimalSeparator, amountDigitGroupingSymbol, geoSeparator, geoOrder, tagSeparator }: { fileType: string, additionalOptions?: ImportFileTypeSupportedAdditionalOptions, aiAdditionalPrompt?: string, fileEncoding?: string, importFile: File, columnMapping?: Record<number, number>, transactionTypeMapping?: Record<string, TransactionType>, hasHeaderLine?: boolean, timeFormat?: string, timezoneFormat?: string, amountDecimalSeparator?: string, amountDigitGroupingSymbol?: string, geoSeparator?: string, geoOrder?: string, tagSeparator?: string }): ApiResponsePromise<ImportTransactionResponsePageWrapper> => {
         let textualAdditionalOptions: string | undefined = undefined;
         let textualColumnMapping: string | undefined = undefined;
         let textualTransactionTypeMapping: string | undefined = undefined;
@@ -700,6 +700,7 @@ export default {
         return axios.postForm<ApiResponse<ImportTransactionResponsePageWrapper>>('v1/transactions/parse_import.json', {
             fileType: fileType,
             options: textualAdditionalOptions,
+            aiPrompt: aiAdditionalPrompt,
             fileEncoding: fileEncoding,
             file: importFile,
             columnMapping: textualColumnMapping,
@@ -824,25 +825,25 @@ export default {
     deleteTransactionTemplate: (req: TransactionTemplateDeleteRequest): ApiResponsePromise<boolean> => {
         return axios.post<ApiResponse<boolean>>('v1/transaction/templates/delete.json', req);
     },
-    getAllInsightsExplorers: (): ApiResponsePromise<InsightsExplorerInfoResponse[]> => {
+    getAllExplorations: (): ApiResponsePromise<InsightsExplorerInfoResponse[]> => {
         return axios.get<ApiResponse<InsightsExplorerInfoResponse[]>>('v1/insights/explorers/list.json');
     },
-    getInsightsExplorer: ({ id }: { id: string }): ApiResponsePromise<InsightsExplorerInfoResponse> => {
+    getExploration: ({ id }: { id: string }): ApiResponsePromise<InsightsExplorerInfoResponse> => {
         return axios.get<ApiResponse<InsightsExplorerInfoResponse>>('v1/insights/explorers/get.json?id=' + id);
     },
-    addInsightsExplorer: (req: InsightsExplorerCreateRequest): ApiResponsePromise<InsightsExplorerInfoResponse> => {
+    addExploration: (req: InsightsExplorerCreateRequest): ApiResponsePromise<InsightsExplorerInfoResponse> => {
         return axios.post<ApiResponse<InsightsExplorerInfoResponse>>('v1/insights/explorers/add.json', req);
     },
-    modifyInsightsExplorer: (req: InsightsExplorerModifyRequest): ApiResponsePromise<InsightsExplorerInfoResponse> => {
+    modifyExploration: (req: InsightsExplorerModifyRequest): ApiResponsePromise<InsightsExplorerInfoResponse> => {
         return axios.post<ApiResponse<InsightsExplorerInfoResponse>>('v1/insights/explorers/modify.json', req);
     },
-    hideInsightsExplorer: (req: InsightsExplorerHideRequest): ApiResponsePromise<boolean> => {
+    hideExploration: (req: InsightsExplorerHideRequest): ApiResponsePromise<boolean> => {
         return axios.post<ApiResponse<boolean>>('v1/insights/explorers/hide.json', req);
     },
-    moveInsightsExplorer: (req: InsightsExplorerMoveRequest): ApiResponsePromise<boolean> => {
+    moveExploration: (req: InsightsExplorerMoveRequest): ApiResponsePromise<boolean> => {
         return axios.post<ApiResponse<boolean>>('v1/insights/explorers/move.json', req);
     },
-    deleteInsightsExplorer: (req: InsightsExplorerDeleteRequest): ApiResponsePromise<boolean> => {
+    deleteExploration: (req: InsightsExplorerDeleteRequest): ApiResponsePromise<boolean> => {
         return axios.post<ApiResponse<boolean>>('v1/insights/explorers/delete.json', req);
     },
     recognizeTransactionText: ({ text }: { text: string }): ApiResponsePromise<RecognizedTransactionResponse> => {
