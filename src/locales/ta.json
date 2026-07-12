@@ -1464,6 +1464,16 @@
             "fieldGeoLocationDescription": "[விருப்பமானது] புவியியல் இருப்பிடம், வடிவம்: 'தீர்க்கரேகை அட்சரேகை', எ.கா.: '116.3912972 39.9057136'",
             "fieldTagNamesDescription": "[விருப்பமானது] குறிச்சொல்‌களின் பெயர்கள், அரைப்புள்ளியால் பிரிக்கப்பட்டது, எ.கா.: 'tag1;tag2;tag3'",
             "fieldCommentDescription": "[விருப்பமானது] விளக்கம்"
+        },
+        "importInsightsExplorerQueries": {
+            "queryIdDescription": "[optional] Unique UUID for the query. Must be a valid UUID and unique within the same exploration. If omitted, a UUID is generated automatically.",
+            "queryNameDescription": "[required] Query name",
+            "conditionDescription": "[optional] Omit this field when relation is \")\", otherwise it is required",
+            "conditionFieldDescription": "[required] Query field name",
+            "conditionOperatorDescription": "[required] Match type",
+            "conditionValueDescription": "[required] Match value(s). Depending on the match type, this may be a string, an array of strings, or an array of numbers",
+            "conditionRelationDescription": "[required] Logical relationship with the previous condition",
+            "additionalQueryDescription": "Additional query conditions"
         }
     },
     "OK": "சரி",
@@ -2724,6 +2734,8 @@
     "Are you sure you want to switch to desktop version?": "டெஸ்க்டாப் அதிர்வெண்க்கு மாற்ற நீங்கள் உறுதியா?",
     "About": "பற்றி",
     "Refresh Browser Cache": "உலாவி கேச் புதுப்பி செய்",
+    "Show Diagnosis Information": "Show Diagnosis Information",
+    "Diagnosis Information": "Diagnosis Information",
     "Frontend Version": "ஃபிரண்ட் எண்ட் அதிர்வெண்",
     "Backend Version": "பேக் எண்ட் அதிர்வெண்",
     "Build Time": "உருவாக்க நேரம்",
