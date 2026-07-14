@@ -545,7 +545,7 @@
                                                     </div>
                                                 </td>
                                             </tr>
-                                            <tr class="transaction-table-row-data text-sm cursor-pointer"
+                                            <tr class="transaction-table-row-data cursor-pointer"
                                                 @click="show(transaction)">
                                                 <td class="transaction-table-column-time">
                                                     <div class="d-flex flex-column">
@@ -575,7 +575,7 @@
                                                 <td class="transaction-table-column-amount" :class="{ 'text-expense': transaction.type === TransactionType.Expense, 'text-income': transaction.type === TransactionType.Income }">
                                                     <div v-if="transaction.sourceAccount">
                                                         <span>{{ getDisplayAmount(transaction) }}</span>
-                                                        <v-tooltip activator="parent" v-if="getDisplayAmountCurrency(transaction) !== userDefaultCurrency">
+                                                        <v-tooltip activator="parent" v-if="!transaction.hideAmount && getDisplayAmountCurrency(transaction) !== userDefaultCurrency">
                                                             {{ getDisplayAmount(transaction, true) }}
                                                         </v-tooltip>
                                                     </div>
