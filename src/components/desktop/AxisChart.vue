@@ -490,7 +490,7 @@ function getDisplayValue(value: number): string {
         return formatAmountToLocalizedNumeralsWithCurrency(value, props.defaultCurrency);
     }
 
-    return formatNumberToLocalizedNumerals(value, 2);
+    return formatNumberToLocalizedNumerals(value, 4);
 }
 
 function clickItem(e: ECElementEvent): void {
@@ -528,8 +528,10 @@ function exportData(): { headers: string[], data: string[][] } {
         row.push(...allSeries.value.map(item => {
             if (props.oneHundredPercentStacked) {
                 return formatNumberToWesternArabicNumeralsWithoutDigitGrouping(item.data[index] ?? 0);
-            } else {
+            } else if (props.amountValue) {
                 return formatAmountToWesternArabicNumeralsWithoutDigitGrouping(item.data[index] ?? 0, props.defaultCurrency);
+            } else {
+                return formatNumberToWesternArabicNumeralsWithoutDigitGrouping(item.data[index] ?? 0);
             }
         }));
         data.push(row);

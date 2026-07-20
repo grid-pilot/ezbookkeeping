@@ -63,6 +63,7 @@ const {
     formatAmountToLocalizedNumeralsWithCurrency,
     formatAmountToWesternArabicNumeralsWithoutDigitGrouping,
     formatNumberToLocalizedNumerals,
+    formatNumberToWesternArabicNumeralsWithoutDigitGrouping,
     formatPercentToLocalizedNumerals
 } = useI18n();
 
@@ -225,7 +226,7 @@ function getDisplayValue(value: number): string {
         return formatAmountToLocalizedNumeralsWithCurrency(value, props.defaultCurrency);
     }
 
-    return formatNumberToLocalizedNumerals(value, 2);
+    return formatNumberToLocalizedNumerals(value, 4);
 }
 
 function clickItem(e: ECElementEvent): void {
@@ -255,7 +256,11 @@ function exportData(): { headers: string[], data: string[][] } {
         row.push(item.name);
 
         for (const child of item.children ?? []) {
-            row.push(formatAmountToWesternArabicNumeralsWithoutDigitGrouping(child.value));
+            if (props.amountValue) {
+                row.push(formatAmountToWesternArabicNumeralsWithoutDigitGrouping(child.value, props.defaultCurrency));
+            } else {
+                row.push(formatNumberToWesternArabicNumeralsWithoutDigitGrouping(child.value));
+            }
         }
 
         data.push(row);
