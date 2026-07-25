@@ -302,14 +302,25 @@
             </div>
         </template>
         <template #item.comment="{ item }">
-            <span v-if="editingTransaction !== item">{{ item.comment || '' }}</span>
+            <template v-if="editingTransaction !== item">
+                <span v-if="!item.comment || item.comment.length <= TRANSACTION_MAX_COMMENT_LENGTH">{{ item.comment || '' }}</span>
+                <div class="text-error font-italic" v-else-if="item.comment && item.comment.length > TRANSACTION_MAX_COMMENT_LENGTH">
+                    <v-tooltip activator="parent">{{ getTransactionDescriptionTooltip(item) }}</v-tooltip>
+                    <v-icon class="me-1" :icon="mdiAlertOutline"/>
+                    <span>{{ item.comment }}</span>
+                </div>
+            </template>
             <div v-if="editingTransaction === item">
-                <v-text-field style="width: 200px" type="text"
+                <v-text-field style="width: calc(max(300px, 100%))" type="text"
                               density="compact" variant="plain"
                               persistent-placeholder
                               :placeholder="tt('Description')"
                               :disabled="!!disabled"
-                              v-model="item.comment" />
+                              v-model="item.comment">
+                    <v-tooltip activator="parent" v-if="item.comment && item.comment.length > TRANSACTION_MAX_COMMENT_LENGTH">
+                        {{ getTransactionDescriptionTooltip(item) }}
+                    </v-tooltip>
+                </v-text-field>
             </div>
         </template>
         <template #bottom>
@@ -427,6 +438,8 @@ import { CategoryType } from '@/core/category.ts';
 import { TransactionType } from '@/core/transaction.ts';
 import { KnownFileType } from '@/core/file.ts';
 import { ImportTransactionColumnType } from '@/core/import_transaction.ts';
+
+import { TRANSACTION_MAX_COMMENT_LENGTH } from '@/consts/transaction.ts';
 
 import { Account, type CategorizedAccountWithDisplayBalance } from '@/models/account.ts';
 import type { TransactionCategory } from '@/models/transaction_category.ts';
@@ -1545,6 +1558,16 @@ function getCurrentInvalidTagNames(): NameValue[] {
     return invalidTags;
 }
 
+function getTransactionDescriptionTooltip(transaction: ImportTransaction): string {
+    if (transaction.comment && transaction.comment.length > TRANSACTION_MAX_COMMENT_LENGTH) {
+        return tt('format.misc.charactersOverLimit', {
+            count: formatNumberToLocalizedNumerals(transaction.comment.length - TRANSACTION_MAX_COMMENT_LENGTH)
+        });
+    } else {
+        return '';
+    }
+}
+
 function getAllOriginalTagNames(): NameValue[] {
     const allOriginalTagNames: Record<string, boolean> = {};
     const allOriginalTags: NameValue[] = [];
@@ -2328,10 +2351,23 @@ defineExpose({
     }
 }
 
-.import-transaction-table .v-autocomplete.v-input.v-input--density-compact:not(.v-textarea) .v-field__input,
-.import-transaction-table .v-select.v-input.v-input--density-compact:not(.v-textarea) .v-field__input {
-    min-height: inherit;
-    padding-top: 4px;
+.import-transaction-table .v-text-field.v-input.v-input--density-compact:not(.v-textarea),
+.import-transaction-table .v-autocomplete.v-input.v-input--density-compact:not(.v-textarea),
+.import-transaction-table .v-select.v-input.v-input--density-compact:not(.v-textarea) {
+    .v-field__input {
+        min-height: inherit;
+        padding-top: 4px;
+    }
+}
+
+.import-transaction-table .amount-input.v-input.v-input--density-compact {
+    .v-field__prepend-inner {
+        padding-top: 3px;
+    }
+
+    .v-field__input {
+        padding-inline-start: 0.2rem;
+    }
 }
 
 .import-transaction-table .v-chip.transaction-tag {
