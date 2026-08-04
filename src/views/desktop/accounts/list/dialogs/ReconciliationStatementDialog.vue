@@ -235,6 +235,15 @@
                             {{ tt('View') }}
                         </v-btn>
                     </template>
+                    <template #no-data>
+                        <div v-if="loading && (!reconciliationStatements || !reconciliationStatements.transactions || !reconciliationStatements.transactions.length)">
+                            <v-skeleton-loader class="skeleton-no-margin my-5" type="text" :loading="true"
+                                               :key="idx" v-for="idx in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"></v-skeleton-loader>
+                        </div>
+                        <div class="my-5" v-else>
+                            {{ tt('No transaction data') }}
+                        </div>
+                    </template>
                     <template #bottom></template>
                 </v-data-table>
 
@@ -623,6 +632,7 @@ function updateClosingBalance(): void {
     }
 
     amountInputDialog.value?.open({
+        title: 'Update Closing Balance',
         text: 'Please enter the new closing balance for this account',
         inputLabel: 'Closing Balance',
         inputPlaceholder: 'Closing Balance',

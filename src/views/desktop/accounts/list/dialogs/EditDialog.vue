@@ -1,24 +1,27 @@
 <template>
-    <v-dialog :width="account.type === AccountType.MultiSubAccounts.type ? 1000 : 800" :persistent="isAccountModified" v-model="showState">
+    <v-dialog width="1000" :persistent="isAccountModified" v-model="showState">
         <two-column-dialog-layout :disabled="loading || submitting" :loading="loading"
                                   :title="tt(title)" :cancel-button-title="tt('Cancel')"
                                   @cancel="cancel">
-            <template #toolbar>
-                <v-btn density="compact" color="default" variant="text" class="ms-2" :icon="true"
-                       :disabled="loading || submitting || account.type !== AccountType.MultiSubAccounts.type">
-                    <v-icon :icon="mdiDotsVertical" size="22" />
-                    <v-menu activator="parent">
-                        <v-list>
-                            <v-list-item :prepend-icon="mdiCreditCardPlusOutline"
-                                         :title="tt('Add Sub-account')"
-                                         @click="addSubAccount"></v-list-item>
-                        </v-list>
-                    </v-menu>
-                </v-btn>
-            </template>
-
-            <template #content-left-column v-if="account.type === AccountType.MultiSubAccounts.type">
+            <template #content-left-column>
                 <div class="px-4">
+                    <v-tabs class="v-tabs-pill" direction="vertical" :class="{ 'readonly': !!editAccountId }"
+                            :disabled="loading || submitting" v-model="account.type">
+                        <v-tab :key="accountType.type" :value="accountType.type" :disabled="!!editAccountId && accountType.type !== account.type"
+                               v-for="accountType in allAccountTypes">
+                            <span>{{ accountType.displayName }}</span>
+                        </v-tab>
+                    </v-tabs>
+                </div>
+                <v-divider class="my-2"/>
+                <div class="px-4" v-if="account.type === AccountType.SingleAccount.type">
+                    <v-tabs direction="vertical" :disabled="loading || submitting" :model-value="-1">
+                        <v-tab :value="-1">
+                            <span>{{ tt('Basic Information') }}</span>
+                        </v-tab>
+                    </v-tabs>
+                </div>
+                <div class="px-4" v-else-if="account.type === AccountType.MultiSubAccounts.type">
                     <v-tabs direction="vertical" :disabled="loading || submitting" v-model="currentAccountIndex">
                         <v-tab :value="-1">
                             <span>{{ tt('Main Account') }}</span>
@@ -32,6 +35,11 @@
                             </v-tab>
                         </template>
                     </v-tabs>
+                    <div class="w-100">
+                        <v-btn class="mt-2 w-100" color="primary" variant="text" density="comfortable"
+                               :disabled="loading || submitting" :prepend-icon="mdiPlus"
+                               @click="addSubAccount">{{ tt('Add Sub-account') }}</v-btn>
+                    </div>
                 </div>
             </template>
 
@@ -41,6 +49,16 @@
                     <v-window-item value="account">
                         <v-form class="my-4">
                             <v-row>
+                                <v-col cols="12" md="12">
+                                    <v-text-field
+                                        type="text"
+                                        persistent-placeholder
+                                        :disabled="loading || submitting"
+                                        :label="currentAccountIndex < 0 ? tt('Account Name') : tt('Sub-account Name')"
+                                        :placeholder="currentAccountIndex < 0 ? tt('Your account name') : tt('Your sub-account name')"
+                                        v-model="selectedAccount.name"
+                                    />
+                                </v-col>
                                 <v-col cols="12" md="12" v-if="account.type === AccountType.SingleAccount.type || currentAccountIndex < 0">
                                     <v-select
                                         item-title="displayName"
@@ -68,29 +86,6 @@
                                             </v-list-item>
                                         </template>
                                     </v-select>
-                                </v-col>
-                                <v-col cols="12" md="12" v-if="account.type === AccountType.SingleAccount.type || currentAccountIndex < 0">
-                                    <v-select
-                                        item-title="displayName"
-                                        item-value="type"
-                                        persistent-placeholder
-                                        :disabled="loading || submitting || !!editAccountId"
-                                        :label="tt('Account Type')"
-                                        :placeholder="tt('Account Type')"
-                                        :items="allAccountTypes"
-                                        :no-data-text="tt('No results')"
-                                        v-model="selectedAccount.type"
-                                    />
-                                </v-col>
-                                <v-col cols="12" md="12">
-                                    <v-text-field
-                                        type="text"
-                                        persistent-placeholder
-                                        :disabled="loading || submitting"
-                                        :label="currentAccountIndex < 0 ? tt('Account Name') : tt('Sub-account Name')"
-                                        :placeholder="currentAccountIndex < 0 ? tt('Your account name') : tt('Your sub-account name')"
-                                        v-model="selectedAccount.name"
-                                    />
                                 </v-col>
                                 <v-col cols="12" md="6">
                                     <icon-select icon-type="account"
@@ -212,18 +207,17 @@ import { useUserStore } from '@/stores/user.ts';
 import { useAccountsStore } from '@/stores/account.ts';
 
 import { itemAndIndex } from '@/core/base.ts';
-import { AccountType } from '@/core/account.ts';
+import { AccountType, AccountCategory } from '@/core/account.ts';
 import { ALL_ACCOUNT_ICONS } from '@/consts/icon.ts';
 import { ALL_ACCOUNT_COLORS } from '@/consts/color.ts';
 import { Account } from '@/models/account.ts';
 
-import { isNumber } from '@/lib/common.ts';
+import { isNumber, isEquals } from '@/lib/common.ts';
 import { getCurrentUnixTime } from '@/lib/datetime.ts';
 import { generateRandomUUID } from '@/lib/misc.ts';
 
 import {
-    mdiDotsVertical,
-    mdiCreditCardPlusOutline,
+    mdiPlus,
     mdiDeleteOutline
 } from '@mdi/js';
 
@@ -267,8 +261,13 @@ const accountsStore = useAccountsStore();
 const confirmDialog = useTemplateRef<ConfirmDialogType>('confirmDialog');
 const snackbar = useTemplateRef<SnackBarType>('snackbar');
 
+let resolveFunc: ((value: AccountEditResponse) => void) | null = null;
+let rejectFunc: ((reason?: unknown) => void) | null = null;
+
 const showState = ref<boolean>(false);
 const activeTab = ref<string>('account');
+const initAccountCategory = ref<AccountCategory>(defaultAccountCategory);
+const initAccount = ref<Account | null>(null);
 const currentAccountIndex = ref<number>(-1);
 
 const canShowBalanceTime = computed<boolean>(() => (!editAccountId.value || isNewAccount(selectedAccount.value)) && (account.value.type === AccountType.SingleAccount.type || currentAccountIndex.value >= 0));
@@ -291,23 +290,24 @@ const accountAmountTitle = computed<string>(() => {
 });
 
 const isAccountModified = computed<boolean>(() => {
-    if (!editAccountId.value) {
-        return !account.value.equals(Account.createNewAccount(defaultAccountCategory, userStore.currentUserDefaultCurrency, account.value.balanceTime ?? getCurrentUnixTimeForNewAccount()));
-    } else {
-        return true;
+    if (!editAccountId.value) { // Add
+        return !!initAccount.value && !isEquals(account.value.toCreateRequest(clientSessionId.value, subAccounts.value), initAccount.value.toCreateRequest(clientSessionId.value, initAccount.value.subAccounts));
+    } else { // Edit
+        return !!initAccount.value && !isEquals(account.value.toModifyRequest(clientSessionId.value, subAccounts.value), initAccount.value.toModifyRequest(clientSessionId.value, initAccount.value.subAccounts));
     }
 });
-
-let resolveFunc: ((value: AccountEditResponse) => void) | null = null;
-let rejectFunc: ((reason?: unknown) => void) | null = null;
 
 function open(options?: { id?: string, currentAccount?: Account, category?: number }): Promise<AccountEditResponse> {
     showState.value = true;
     loading.value = true;
     submitting.value = false;
 
-    const newAccount = Account.createNewAccount(defaultAccountCategory, userStore.currentUserDefaultCurrency, getCurrentUnixTimeForNewAccount());
-    account.value.fillFrom(newAccount);
+    if (isNumber(options?.category) && AccountCategory.valueOf(options.category)) {
+        initAccountCategory.value = AccountCategory.valueOf(options.category)!;
+    }
+
+    initAccount.value = Account.createNewAccount(initAccountCategory.value, userStore.currentUserDefaultCurrency, getCurrentUnixTimeForNewAccount());
+    account.value.fillFrom(initAccount.value);
     subAccounts.value = [];
     currentAccountIndex.value = -1;
     clientSessionId.value = generateRandomUUID();
@@ -322,6 +322,7 @@ function open(options?: { id?: string, currentAccount?: Account, category?: numb
             accountId: editAccountId.value
         }).then(response => {
             setAccount(response);
+            initAccount.value = Account.of(response);
             loading.value = false;
         }).catch(error => {
             loading.value = false;
@@ -335,8 +336,11 @@ function open(options?: { id?: string, currentAccount?: Account, category?: numb
         });
     } else {
         if (options && isNumber(options.category)) {
-            account.value.category = options.category;
-            account.value.setSuitableIcon(1, options.category);
+            initAccount.value.category = options.category;
+            initAccount.value.setSuitableIcon(1, options.category);
+
+            account.value.category = initAccount.value.category;
+            account.value.icon = initAccount.value.icon;
         }
 
         editAccountId.value = null;
