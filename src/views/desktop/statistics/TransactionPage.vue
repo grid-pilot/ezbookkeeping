@@ -133,7 +133,7 @@
                                                 </v-list>
                                             </v-menu>
 
-                                            <v-btn density="compact" color="default" variant="text" size="24"
+                                            <v-btn density="compact" color="default" variant="text"
                                                    class="ms-2" :icon="true" :loading="loading" @click="reload(true)">
                                                 <template #loader>
                                                     <v-progress-circular indeterminate size="20"/>
@@ -299,7 +299,7 @@
                                                 <v-list-item class="ps-0" density="comfortable" v-if="!item.hidden">
                                                     <template #prepend>
                                                         <router-link class="statistics-list-item" :to="getTransactionItemLinkUrl(item.id)">
-                                                            <ItemIcon :icon-type="queryChartDataCategory" size="34px"
+                                                            <ItemIcon :icon-type="getIconType(queryChartDataCategory, item.iconType)" size="34px"
                                                                       :icon-id="item.icon"
                                                                       :color="item.color"></ItemIcon>
                                                         </router-link>
@@ -529,6 +529,9 @@ import {
     getDateTypeByDateRange,
     getDateRangeByDateType
 } from '@/lib/datetime.ts';
+import {
+    getIconType
+} from '@/lib/icon.ts';
 
 import {
     mdiCheck,

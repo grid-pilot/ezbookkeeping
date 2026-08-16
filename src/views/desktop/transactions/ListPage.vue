@@ -116,7 +116,7 @@
                                                     </v-list>
                                                 </v-menu>
                                             </v-btn>
-                                            <v-btn density="compact" color="default" variant="text" size="24"
+                                            <v-btn density="compact" color="default" variant="text"
                                                    class="ms-2" :icon="true" :loading="loading" @click="reload(true, false)">
                                                 <template #loader>
                                                     <v-progress-circular indeterminate size="20"/>
@@ -290,7 +290,7 @@
                                                                                  v-bind="props">
                                                                         <v-list-item-title>
                                                                             <div class="d-flex align-center">
-                                                                                <ItemIcon icon-type="category" size="24px" :icon-id="category.icon" :color="category.color"></ItemIcon>
+                                                                                <ItemIcon :icon-type="getCategoryIconType(category.iconType)" size="24px" :icon-id="category.icon" :color="category.color"></ItemIcon>
                                                                                 <span class="text-body-medium ms-2">{{ category.name }}</span>
                                                                             </div>
                                                                         </v-list-item-title>
@@ -322,7 +322,7 @@
                                                                         <v-list-item-title class="cursor-pointer"
                                                                                            @click="changeCategoryFilter(subCategory.id)">
                                                                             <div class="d-flex align-center">
-                                                                                <ItemIcon icon-type="category" size="24px" :icon-id="subCategory.icon" :color="subCategory.color"></ItemIcon>
+                                                                                <ItemIcon :icon-type="getCategoryIconType(subCategory.iconType)" size="24px" :icon-id="subCategory.icon" :color="subCategory.color"></ItemIcon>
                                                                                 <span class="text-body-medium ms-2">{{ subCategory.name }}</span>
                                                                             </div>
                                                                         </v-list-item-title>
@@ -433,7 +433,7 @@
                                                                 <v-list-item-title class="cursor-pointer"
                                                                                    @click="changeAccountFilter(account.id)">
                                                                     <div class="d-flex align-center">
-                                                                        <ItemIcon icon-type="account" size="24px" :icon-id="account.icon" :color="account.color"></ItemIcon>
+                                                                        <ItemIcon :icon-type="getAccountIconType(account.iconType)" size="24px" :icon-id="account.icon" :color="account.color"></ItemIcon>
                                                                         <span class="text-body-medium ms-2">{{ account.name }}</span>
                                                                     </div>
                                                                 </v-list-item-title>
@@ -566,7 +566,7 @@
                                                 </td>
                                                 <td class="transaction-table-column-category">
                                                     <div class="d-flex align-center">
-                                                        <ItemIcon size="24px" icon-type="category"
+                                                        <ItemIcon size="24px" :icon-type="getCategoryIconType(transaction.category.iconType)"
                                                                   :icon-id="transaction.category.icon"
                                                                   :color="transaction.category.color"
                                                                   v-if="transaction.category && transaction.category.color"></ItemIcon>
@@ -752,6 +752,9 @@ import { AmountFilterType } from '@/core/numeral.ts';
 import { ThemeType } from '@/core/theme.ts';
 import { TransactionType } from '@/core/transaction.ts';
 import { TemplateType }  from '@/core/template.ts';
+
+import { DEFAULT_PAGE_COUNTS } from '@/consts/page.ts';
+
 import type { TransactionCategory } from '@/models/transaction_category.ts';
 import { type Transaction, TransactionTagFilter } from '@/models/transaction.ts';
 import type { TransactionTemplate } from '@/models/transaction_template.ts';
@@ -781,6 +784,10 @@ import {
     getFullMonthDateRange,
     getValidMonthDayOrCurrentDayShortDate
 } from '@/lib/datetime.ts';
+import {
+    getAccountIconType,
+    getCategoryIconType
+} from '@/lib/icon.ts';
 import {
     categoryTypeToTransactionType,
     transactionTypeToCategoryType
@@ -853,7 +860,7 @@ const {
     tt,
     getAllRecentMonthDateRanges,
     getWeekdayLongName,
-    formatNumberToLocalizedNumerals
+    getTablePageOptions
 } = useI18n();
 
 const {
@@ -954,18 +961,7 @@ const showFilterCategoryDialog = ref<boolean>(false);
 const showFilterTagDialog = ref<boolean>(false);
 
 const isDarkMode = computed<boolean>(() => theme.global.name.value === ThemeType.Dark);
-
-const allPageCounts = computed<NameNumeralValue[]>(() => {
-    const pageCounts: NameNumeralValue[] = [];
-    const availableCountPerPage: number[] = [ 5, 10, 15, 20, 25, 30, 50 ];
-
-    for (const count of availableCountPerPage) {
-        pageCounts.push({ value: count, name: formatNumberToLocalizedNumerals(count) });
-    }
-
-    return pageCounts;
-});
-
+const allPageCounts = computed<NameNumeralValue[]>(() => getTablePageOptions(DEFAULT_PAGE_COUNTS, undefined, false, true));
 const recentMonthDateRanges = computed<LocalizedRecentMonthDateRange[]>(() => getAllRecentMonthDateRanges(pageType.value === TransactionListPageType.List.type || pageType.value === TransactionListPageType.Gallery.type, true));
 
 const allTransactionTemplates = computed<TransactionTemplate[]>(() => {
@@ -1999,7 +1995,7 @@ init(props);
 
 .transaction-calendar-container .dp--main {
     &.transaction-calendar-with-alternate-date .dp--calendar .dp--calendar-row {
-        --dp-cell-size: 96px;
+        --dp-cell-size: 90px;
     }
 
     .dp--menu {
@@ -2015,7 +2011,7 @@ init(props);
         }
 
         .dp--calendar-row {
-            --dp-cell-size: 80px;
+            --dp-cell-size: 76px;
             --dp-primary-color: rgba(var(--v-theme-primary), var(--v-activated-opacity));
             --dp-primary-text-color: rgb(var(--v-theme-primary));
 
