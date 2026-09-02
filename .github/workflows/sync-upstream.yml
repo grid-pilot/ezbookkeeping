@@ -9,7 +9,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     outputs:
-      updated: ${{ steps.sync.outputs.has_new_commits }}
+      updated: ${{ steps.sync.outputs.updated }}
     permissions:
       contents: write
     env:
@@ -18,15 +18,41 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Sync fork with upstream
-        id: sync
-        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
         with:
-          upstream_sync_repo: mayswind/ezbookkeeping
-          upstream_sync_branch: main
-          target_sync_branch: main
-          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Sync application code with upstream
+        id: sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/mayswind/ezbookkeeping.git
+          git fetch upstream main
+
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "No upstream application changes to sync."
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "GH Action - Upstream Sync"
+          git config user.email "action@github.com"
+          git merge --no-commit --no-ff upstream/main
+
+          # The default GitHub Actions token cannot update workflow files. Keep
+          # the repository's reviewed CI/deploy workflows while syncing the app.
+          git restore --source=HEAD --staged --worktree .github/workflows
+
+          if git diff --cached --quiet; then
+            echo "Only upstream workflow changes were available."
+            git merge --abort
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "chore: sync application code from upstream"
+          git push origin HEAD:main
+          echo "updated=true" >> "$GITHUB_OUTPUT"
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -41,6 +67,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # The sync job pushes a newer commit in this same workflow run.
+          ref: main
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
