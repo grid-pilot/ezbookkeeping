@@ -157,6 +157,7 @@ type SnackBarType = InstanceType<typeof SnackBar>;
 const props = defineProps<{
     type: AccountFilterType;
     selectedAccountIds?: string[];
+    disableHiddenAccount?: boolean;
     autoSave?: boolean;
     show: boolean;
 }>();
@@ -184,7 +185,7 @@ const {
     isAccountChecked,
     loadFilterAccountIds,
     saveFilterAccountIds
-} = useAccountFilterSettingPageBase(props.type, props.selectedAccountIds);
+} = useAccountFilterSettingPageBase(props.type, computed(() => props.disableHiddenAccount));
 
 const accountsStore = useAccountsStore();
 
@@ -203,7 +204,7 @@ function init(): void {
     }).then(() => {
         loading.value = false;
 
-        if (!loadFilterAccountIds()) {
+        if (!loadFilterAccountIds(props.selectedAccountIds)) {
             snackbar.value?.showError('Parameter Invalid');
         }
     }).catch(error => {
@@ -266,7 +267,7 @@ function cancel(): void {
 
 watch(() => props.show, (newValue) => {
     if (newValue) {
-        loadFilterAccountIds();
+        loadFilterAccountIds(props.selectedAccountIds);
         showHidden.value = false;
         filterContent.value = '';
     }
