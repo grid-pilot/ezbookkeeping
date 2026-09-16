@@ -836,15 +836,8 @@ const filterMenus = computed<ImportTransactionCheckDataMenuGroup[]>(() => [
 const toolMenus = computed<ImportTransactionCheckDataMenu[]>(() => [
     {
         prependIcon: mdiTextBoxEditOutline,
-        title: tt('Batch Apply Rules'),
-        disabled: isEditing.value,
-        onClick: showBatchApplyRulesDialog
-    },
-    {
-        prependIcon: mdiTextBoxEditOutline,
         title: tt('Batch Replace Selected Expense Categories'),
         disabled: isEditing.value || selectedExpenseTransactionCount.value < 1,
-        divider: true,
         onClick: () => showBatchReplaceDialog('expenseCategory')
     },
     {
@@ -1795,7 +1788,9 @@ function showBatchReplaceDialog(type: BatchReplaceDialogDataType, allSourceTagIt
                         updated = true;
                     }
                 } else if (type === 'timezone') {
+                    const oldUtcOffset = importTransaction.utcOffset;
                     importTransaction.utcOffset = getTimezoneOffsetMinutes(importTransaction.time, result.targetItem as string);
+                    importTransaction.time = importTransaction.time - (importTransaction.utcOffset - oldUtcOffset) * 60;
                     updated = true;
                 } else if (type === 'tag') {
                     const removeIndex: number[] = [];
@@ -2235,6 +2230,7 @@ defineExpose({
     toolMenus,
     isEditing,
     canImport,
+    showBatchApplyRulesDialog,
     updateAllTransactionsIsValid,
     reset,
     setCountPerPage
